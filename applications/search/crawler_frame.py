@@ -77,21 +77,22 @@ def extract_next_links(rawDataObj):
     global subdomains
 
     try:
-        #Check if link is redirected
+        # Check if link is redirected
         to_parse = rawDataObj.url
         if rawDataObj.is_redirected:
             to_parse = rawDataObj.final_url
         parsed = urlparse(to_parse)
     
-        #Check if the page is empty
+        # Check if the page is empty
         if rawDataObj.content == "":
             return outputLinks
-
+ 
+        # Check if there is an error message
         if rawDataObj.error_message:
             return outputLinks
 
-        doc = html.fromstring(rawDataObj.content)
-        scraped_urls = set(doc.xpath('//a/@href'))   #Returns a set of the links on root page
+        doc = html.fromstring(rawDataObj.content)   # Turns content string into html doc
+        scraped_urls = set(doc.xpath('//a/@href'))   # Returns a set of the links on root page
         
         for url in scraped_urls:
             #Keep track of # of different URLs processed from this subdomain
@@ -102,23 +103,22 @@ def extract_next_links(rawDataObj):
 
             #Turn scraped URLs into absolute URLs
             parsed_scraped = urlparse(url)
-            
             if (parsed_scraped.scheme == ""):
                 absolute_url = urljoin(parsed.scheme + "://" + parsed.netloc, url)
             else:
                 absolute_url = url
-                
+            
             outputLinks.append(absolute_url)
             
     except:
         return outputLinks
 
-    #Check and update most outlinks
+    # Check and update most outlinks
     if len(outputLinks) > MAX_OUTLINKS:
         MAX_OUTLINKS = len(outputLinks)
         MAX_OUTLINKS_URL = rawDataObj.url
 
-    #Write analytics to file
+    # Write analytics to file
     with open('analytics.txt', 'w') as file:
         file.write("URL with the most outlinks: " + str(MAX_OUTLINKS_URL) + "\n")
         file.write("Number of outlinks: " + str(MAX_OUTLINKS) + "\n\n")
@@ -139,8 +139,8 @@ def is_valid(url):
     if parsed.scheme not in set(["http", "https"]):
         return False
     try:
-        #NOTE: I found a few of my regular expression patterns from this website:
-        #https://support.archive-it.org/hc/en-us/articles/208332963-Modify-crawl-scope-with-a-Regular-Expression
+        # NOTE: I found a few of my regular expression patterns from this website:
+        # https://support.archive-it.org/hc/en-us/articles/208332963-Modify-crawl-scope-with-a-Regular-Expression
         
         return ".ics.uci.edu" in parsed.hostname \
             and not re.match(".*calendar.*|.*mailto:.*"\
